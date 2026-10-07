@@ -37,7 +37,11 @@ class EnhancePipeline(
 ) {
     private val faceRestorer = FaceRestorer(models)
 
-    suspend fun run(uri: Uri, requested: EnhanceSettings, onProgress: (Progress) -> Unit): EnhanceResult {
+    /** All heavy work runs off the main thread (a ViewModel scope starts on Main, which caused ANRs). */
+    suspend fun run(uri: Uri, requested: EnhanceSettings, onProgress: (Progress) -> Unit): EnhanceResult =
+        withContext(Dispatchers.Default) { runWithRetry(uri, requested, onProgress) }
+
+    private suspend fun runWithRetry(uri: Uri, requested: EnhanceSettings, onProgress: (Progress) -> Unit): EnhanceResult {
         var attempt = 0
         var divisor = 1.0
         var settings = requested
