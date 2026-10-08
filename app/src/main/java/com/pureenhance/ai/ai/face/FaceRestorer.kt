@@ -103,7 +103,7 @@ class FaceRestorer(private val models: ModelProvider) {
     }
 
     companion object {
-        const val MAX_FACES = 6
+        const val MAX_FACES = 3
         const val CROP_MARGIN = 1.75f
 
         /** Faces with too little pixel information are skipped / blended weakly to avoid hallucinated detail. */

@@ -69,7 +69,7 @@ class EnhancePipeline(
         uri: Uri, settings: EnhanceSettings, divisor: Double, onProgress: (Progress) -> Unit,
     ): EnhanceResult {
         val notes = ArrayList<String>()
-        fun report(stage: Stage, f: Float) = onProgress(Progress(stage, f.coerceIn(0f, 1f)))
+        fun report(stage: Stage, f: Float, eta: Int? = null) = onProgress(Progress(stage, f.coerceIn(0f, 1f), eta))
 
         ThermalGuard.throttleMs(context) // throws if the device is already critically hot
         report(Stage.ANALYZING, 0f)
@@ -83,8 +83,13 @@ class EnhancePipeline(
         val info = withContext(Dispatchers.IO) { loader.readInfo(uri) }
         val maxOut = (MemoryPlanner.maxOutputPixels(device.tier, device.availRamBytes, quality.memoryFactor) / divisor)
             .toLong().coerceAtLeast(500_000L)
-        val plan = MemoryPlanner.plan(info.width, info.height, settings.scale, maxOut)
+        val memPlan = MemoryPlanner.plan(info.width, info.height, settings.scale, maxOut)
+        val plan = MemoryPlanner.capInput(memPlan, quality.maxInputPixels)
         plan.message(settings.scale)?.let { notes += it }
+        if (plan.inputWidth != memPlan.inputWidth) {
+            val mp = String.format(java.util.Locale.US, "%.1f", plan.inputWidth.toLong() * plan.inputHeight / 1e6)
+            notes += "To keep it fast, this photo was processed at $mp MP. Choose Maximum quality for more detail."
+        }
 
         val input = withContext(Dispatchers.IO) { loader.decode(uri, info, plan.inputWidth, plan.inputHeight) }
         var work = input
@@ -126,11 +131,16 @@ class EnhancePipeline(
             // ---- tiled AI super-resolution ----
             report(Stage.UPSCALING, 0.34f)
             val sr = models.superRes()
+            notes += "AI engine: ${sr.backend}"
             val upscaler = TiledUpscaler(
                 SuperResInference(sr, ModelSpecs.SR_SCALE), ModelSpecs.TILE,
                 throttleMs = { ThermalGuard.throttleMs(context) },
             )
-            base = upscaler.upscale(work, plan.scale, quality.tilePad) { f -> report(Stage.UPSCALING, 0.34f + 0.56f * f) }
+            val t0 = System.nanoTime()
+            base = upscaler.upscale(work, plan.scale, quality.tilePad) { f ->
+                val eta = if (f > 0.03f) (((System.nanoTime() - t0) / 1e9) * (1 - f) / f).toInt() else null
+                report(Stage.UPSCALING, 0.34f + 0.56f * f, eta)
+            }
 
             // ---- finalize ----
             report(Stage.FINALIZING, 0.92f)

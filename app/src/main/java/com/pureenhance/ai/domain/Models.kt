@@ -14,10 +14,10 @@ enum class EnhanceMode(val label: String, val hint: String) {
     HD_UPSCALE("HD Upscale", "Resolution only"),
 }
 
-enum class Quality(val label: String, val memoryFactor: Double, val tilePad: Int) {
-    BALANCED("Balanced", 0.50, 8),
-    HIGH("High", 0.75, 16),
-    MAXIMUM("Maximum", 1.00, 24),
+enum class Quality(val label: String, val memoryFactor: Double, val tilePad: Int, val maxInputPixels: Long) {
+    BALANCED("Balanced", 0.50, 8, 1_500_000L),
+    HIGH("High", 0.75, 16, 3_000_000L),
+    MAXIMUM("Maximum", 1.00, 24, 8_000_000L),
 }
 
 data class EnhanceSettings(val mode: EnhanceMode, val quality: Quality, val scale: Int)
@@ -31,7 +31,7 @@ enum class Stage(val label: String) {
 }
 
 /** [fraction] is overall progress 0..1 derived from real pipeline work (tiles processed, faces restored). */
-data class Progress(val stage: Stage, val fraction: Float)
+data class Progress(val stage: Stage, val fraction: Float, val etaSeconds: Int? = null)
 
 /** Optional subtle controls. Defaults reproduce the pipeline's own result. */
 data class EditParams(

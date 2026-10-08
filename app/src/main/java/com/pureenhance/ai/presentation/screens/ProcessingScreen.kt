@@ -61,6 +61,8 @@ fun ProcessingScreen(progress: Progress?, onCancel: () -> Unit) {
     val secondary = MaterialTheme.colorScheme.secondary
     val current = progress?.stage ?: Stage.ANALYZING
     val fraction = progress?.fraction ?: 0f
+    val eta = progress?.etaSeconds
+    val etaText = eta?.let { "  ·  about " + (if (it >= 90) "${it / 60 + 1} min" else "$it s") + " left" } ?: ""
 
     Column(
         Modifier.fillMaxSize().systemBarsPadding().verticalScroll(rememberScrollState()).padding(28.dp),
@@ -94,7 +96,7 @@ fun ProcessingScreen(progress: Progress?, onCancel: () -> Unit) {
         Spacer(Modifier.height(24.dp))
         LinearProgressIndicator(progress = { fraction }, modifier = Modifier.fillMaxWidth().height(6.dp))
         Spacer(Modifier.height(8.dp))
-        Text("Please wait...  ${(fraction * 100).toInt()}%", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        Text("Please wait...  ${(fraction * 100).toInt()}%$etaText", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(Modifier.height(24.dp))
         SoftButton("Cancel", onCancel)
     }

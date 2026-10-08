@@ -56,7 +56,7 @@ class ModelProvider(private val context: Context) {
         }
         return OrtModel.open(
             env = env, name = file, path = path, order = order,
-            threads = device.cores.coerceIn(2, 6),
+            threads = device.cores.coerceIn(2, 4),
             onRejected = { markBad(file, it) },
             selfTest = { selfTest(it, testSize, outScale) },
         )

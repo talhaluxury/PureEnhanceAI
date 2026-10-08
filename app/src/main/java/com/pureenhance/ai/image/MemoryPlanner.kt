@@ -56,5 +56,16 @@ object MemoryPlanner {
         return ProcessingPlan(s, w, h, downgradedScale = requestedScale != s, inputReduced = true)
     }
 
+    /** Inference time grows with the number of *input* pixels, so each quality level caps them. */
+    fun capInput(plan: ProcessingPlan, maxInputPixels: Long): ProcessingPlan {
+        val px = plan.inputWidth.toLong() * plan.inputHeight
+        if (px <= maxInputPixels) return plan
+        val f = sqrt(maxInputPixels.toDouble() / px)
+        return plan.copy(
+            inputWidth = floor(plan.inputWidth * f).toInt().coerceAtLeast(16),
+            inputHeight = floor(plan.inputHeight * f).toInt().coerceAtLeast(16),
+        )
+    }
+
     fun recommendedScale(longSide: Int): Int = if (longSide < 1200) 4 else 2
 }

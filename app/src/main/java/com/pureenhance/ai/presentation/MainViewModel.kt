@@ -234,8 +234,8 @@ class MainViewModel(app: Application, private val saved: SavedStateHandle) : And
 
         fun defaultQuality(tier: DeviceTier) = when (tier) {
             DeviceTier.LOW -> Quality.BALANCED
-            DeviceTier.MID -> Quality.HIGH
-            DeviceTier.HIGH, DeviceTier.ULTRA -> Quality.MAXIMUM
+            DeviceTier.MID -> Quality.BALANCED
+            DeviceTier.HIGH, DeviceTier.ULTRA -> Quality.HIGH
         }
 
         /** Recommends 4× only for small photos that also fit the device's memory budget. */
