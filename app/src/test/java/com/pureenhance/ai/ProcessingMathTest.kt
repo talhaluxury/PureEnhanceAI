@@ -80,7 +80,7 @@ class ProcessingMathTest {
     @Test fun faceGateIsConservativeForTinyFaces() {
         assertEquals(0f, FaceRestorer.gateFor(30), 0f)
         assertTrue(FaceRestorer.gateFor(60) < FaceRestorer.gateFor(100))
-        assertEquals(1f, FaceRestorer.gateFor(300), 0f)
+        assertEquals(0.3f, FaceRestorer.gateFor(300), 0f) // large faces: light touch only
     }
 
     @Test fun profileJsonMatchesSpecShape() {

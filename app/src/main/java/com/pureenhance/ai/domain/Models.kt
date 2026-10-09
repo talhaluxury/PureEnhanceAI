@@ -15,7 +15,7 @@ enum class EnhanceMode(val label: String, val hint: String) {
 }
 
 enum class Quality(val label: String, val memoryFactor: Double, val tilePad: Int, val maxInputPixels: Long) {
-    BALANCED("Fast", 0.50, 8, 12_000_000L),
+    BALANCED("Fast", 0.50, 8, 1_000_000L),
     HIGH("High", 0.75, 16, 600_000L),
     MAXIMUM("Maximum", 1.00, 24, 1_500_000L),
 }

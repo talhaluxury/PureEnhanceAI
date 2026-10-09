@@ -85,11 +85,14 @@ class EnhancePipeline(
         val maxOut = (MemoryPlanner.maxOutputPixels(device.tier, device.availRamBytes, quality.memoryFactor) / divisor)
             .toLong().coerceAtLeast(500_000L)
         val memPlan = MemoryPlanner.plan(info.width, info.height, settings.scale, maxOut)
-        val plan = MemoryPlanner.capInput(memPlan, quality.maxInputPixels)
-        plan.message(settings.scale)?.let { notes += it }
-        if (plan.inputWidth != memPlan.inputWidth) {
-            val mp = String.format(java.util.Locale.US, "%.1f", plan.inputWidth.toLong() * plan.inputHeight / 1e6)
-            notes += "To keep it fast, this photo was processed at $mp MP. Choose Maximum quality for more detail."
+        // Never shrink a photo to save time (that destroys detail). Big photos are enhanced at their own size;
+        // upscaling (interpolation or AI) only runs for photos small enough to benefit and finish quickly.
+        val canUpscale = memPlan.inputWidth.toLong() * memPlan.inputHeight <= quality.maxInputPixels
+        val plan = if (canUpscale) memPlan else MemoryPlanner.plan(info.width, info.height, 1, maxOut).copy(scale = 1)
+        if (canUpscale) {
+            plan.message(settings.scale)?.let { notes += it }
+        } else {
+            notes += "This photo is already large, so it was enhanced at its original size (no upscaling) to keep every detail and finish fast."
         }
 
         val input = withContext(Dispatchers.IO) { loader.decode(uri, info, plan.inputWidth, plan.inputHeight) }
@@ -132,7 +135,10 @@ class EnhancePipeline(
             // ---- tiled AI super-resolution ----
             report(Stage.UPSCALING, 0.34f)
             val fast = quality == Quality.BALANCED
-            val upscaled: Bitmap = if (fast) {
+            val upscaled: Bitmap = if (plan.scale == 1) {
+                notes += "Faces restored with AI; denoise, tone and sharpening applied at original size."
+                work.copy(Bitmap.Config.ARGB_8888, true) ?: throw EnhanceException.OutOfMemory()
+            } else if (fast) {
                 notes += "Fast mode: faces are restored with AI, the rest is cleanly upscaled. Choose High or Maximum for full AI detail (much slower)."
                 Lanczos.resize(work, plan.scale, check)
             } else {

@@ -111,7 +111,8 @@ class FaceRestorer(private val models: ModelProvider) {
             facePx < 40 -> 0f
             facePx < 80 -> 0.5f
             facePx < 140 -> 0.8f
-            else -> 1f
+            facePx < 240 -> 0.55f
+            else -> 0.3f
         }
     }
 }

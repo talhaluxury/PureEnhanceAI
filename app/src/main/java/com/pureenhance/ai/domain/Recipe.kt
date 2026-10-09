@@ -33,12 +33,12 @@ data class Recipe(
                 EnhanceMode.OLD_PHOTO -> Recipe(
                     resolved, if (p.noise == Level.LOW) 0.35f else 0.6f, true, hasFaces, fs(0.7f), 1f,
                 )
-                EnhanceMode.PORTRAIT -> Recipe(resolved, noiseDenoise * 0.7f, false, hasFaces, fs(0.8f), 0.8f)
+                EnhanceMode.PORTRAIT -> Recipe(resolved, noiseDenoise * 0.7f, false, hasFaces, fs(0.8f), 0.45f)
                 EnhanceMode.LOW_QUALITY -> Recipe(
-                    resolved, maxOf(noiseDenoise, if (p.hasJpegArtifacts) 0.3f else 0.2f), false, hasFaces, fs(0.65f), 0.8f,
+                    resolved, maxOf(noiseDenoise, if (p.hasJpegArtifacts) 0.3f else 0.2f), false, hasFaces, fs(0.65f), 0.45f,
                 )
                 EnhanceMode.HD_UPSCALE -> Recipe(resolved, 0f, false, false, 0f, 0f)
-                EnhanceMode.AUTO -> Recipe(resolved, noiseDenoise, false, hasFaces, fs(0.7f), if (needsTone) 0.7f else 0.4f)
+                EnhanceMode.AUTO -> Recipe(resolved, noiseDenoise, false, hasFaces, fs(0.7f), if (needsTone) 0.45f else 0.2f)
             }
         }
     }
