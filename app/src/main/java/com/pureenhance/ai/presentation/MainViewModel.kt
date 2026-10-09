@@ -107,11 +107,11 @@ class MainViewModel(app: Application, private val saved: SavedStateHandle) : And
                     _state.update { it.copy(progress = p) }
                 }
                 discardResult()
-                val first = withContext(Dispatchers.Default) { container.renderer.renderPreview(result, EditParams()) }
-                edits.value = EditParams()
+                val first = withContext(Dispatchers.Default) { container.renderer.renderPreview(result, result.defaultParams) }
+                edits.value = result.defaultParams
                 _state.update {
                     it.copy(
-                        screen = Screen.RESULT, result = result, params = EditParams(), previewAfter = first,
+                        screen = Screen.RESULT, result = result, params = result.defaultParams, previewAfter = first,
                         saveState = SaveState.Idle, progress = null,
                     )
                 }
@@ -232,11 +232,9 @@ class MainViewModel(app: Application, private val saved: SavedStateHandle) : And
         const val KEY_SCALE = "scale"
         private const val PREVIEW_SIDE = 1600
 
-        fun defaultQuality(tier: DeviceTier) = when (tier) {
-            DeviceTier.LOW -> Quality.BALANCED
-            DeviceTier.MID -> Quality.BALANCED
-            DeviceTier.HIGH, DeviceTier.ULTRA -> Quality.HIGH
-        }
+        /** Fast mode (AI faces + Lanczos background) is the default everywhere; full-AI modes are opt-in. */
+        @Suppress("UNUSED_PARAMETER")
+        fun defaultQuality(tier: DeviceTier) = Quality.BALANCED
 
         /** Recommends 4× only for small photos that also fit the device's memory budget. */
         fun recommendedScale(w: Int, h: Int, tier: DeviceTier, quality: Quality): Int {

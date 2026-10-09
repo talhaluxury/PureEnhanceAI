@@ -15,9 +15,9 @@ enum class EnhanceMode(val label: String, val hint: String) {
 }
 
 enum class Quality(val label: String, val memoryFactor: Double, val tilePad: Int, val maxInputPixels: Long) {
-    BALANCED("Balanced", 0.50, 8, 1_500_000L),
-    HIGH("High", 0.75, 16, 3_000_000L),
-    MAXIMUM("Maximum", 1.00, 24, 8_000_000L),
+    BALANCED("Fast", 0.50, 8, 12_000_000L),
+    HIGH("High", 0.75, 16, 600_000L),
+    MAXIMUM("Maximum", 1.00, 24, 1_500_000L),
 }
 
 data class EnhanceSettings(val mode: EnhanceMode, val quality: Quality, val scale: Int)
@@ -64,6 +64,8 @@ class EnhanceResult(
     val profile: EnhancementProfile,
     val modeUsed: EnhanceMode,
     val notes: List<String>,
+    /** What the "Enhanced" preset means for this result (Fast mode adds mild sharpening). */
+    val defaultParams: EditParams,
 ) {
     val outputWidth: Int get() = base.width
     val outputHeight: Int get() = base.height

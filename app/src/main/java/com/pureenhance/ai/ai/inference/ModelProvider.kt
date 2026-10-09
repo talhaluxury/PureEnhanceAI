@@ -49,8 +49,7 @@ class ModelProvider(private val context: Context) {
         val device = DeviceProfile.read(context)
         val path = store.resolve(file).absolutePath
         val order = buildList {
-            // NNAPI only where it is generally trustworthy (Android 11+, mid/high-tier hardware).
-            if (device.tier >= DeviceTier.MID && Build.VERSION.SDK_INT >= 30 && !isBad(file, Backend.NNAPI)) add(Backend.NNAPI)
+            // NNAPI is skipped on purpose: many phones route it to a very slow reference CPU driver.
             if (!isBad(file, Backend.XNNPACK)) add(Backend.XNNPACK)
             add(Backend.CPU)
         }

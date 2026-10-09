@@ -11,6 +11,7 @@ import com.pureenhance.ai.ai.models.ModelSpecs
 import com.pureenhance.ai.ai.postprocessing.AutoLevels
 import com.pureenhance.ai.ai.postprocessing.BilateralDenoiser
 import com.pureenhance.ai.ai.postprocessing.DamageReducer
+import com.pureenhance.ai.ai.postprocessing.Lanczos
 import com.pureenhance.ai.ai.tiling.TiledUpscaler
 import com.pureenhance.ai.image.BitmapUtils
 import com.pureenhance.ai.image.ImageLoader
@@ -130,17 +131,24 @@ class EnhancePipeline(
 
             // ---- tiled AI super-resolution ----
             report(Stage.UPSCALING, 0.34f)
-            val sr = models.superRes()
-            notes += "AI engine: ${sr.backend}"
-            val upscaler = TiledUpscaler(
-                SuperResInference(sr, ModelSpecs.SR_SCALE), ModelSpecs.TILE,
-                throttleMs = { ThermalGuard.throttleMs(context) },
-            )
-            val t0 = System.nanoTime()
-            base = upscaler.upscale(work, plan.scale, quality.tilePad) { f ->
-                val eta = if (f > 0.03f) (((System.nanoTime() - t0) / 1e9) * (1 - f) / f).toInt() else null
-                report(Stage.UPSCALING, 0.34f + 0.56f * f, eta)
+            val fast = quality == Quality.BALANCED
+            val upscaled: Bitmap = if (fast) {
+                notes += "Fast mode: faces are restored with AI, the rest is cleanly upscaled. Choose High or Maximum for full AI detail (much slower)."
+                Lanczos.resize(work, plan.scale, check)
+            } else {
+                val sr = models.superRes()
+                notes += "AI engine: ${sr.backend}"
+                val upscaler = TiledUpscaler(
+                    SuperResInference(sr, ModelSpecs.SR_SCALE), ModelSpecs.TILE,
+                    throttleMs = { ThermalGuard.throttleMs(context) },
+                )
+                val t0 = System.nanoTime()
+                upscaler.upscale(work, plan.scale, quality.tilePad) { f ->
+                    val eta = if (f > 0.03f) (((System.nanoTime() - t0) / 1e9) * (1 - f) / f).toInt() else null
+                    report(Stage.UPSCALING, 0.34f + 0.56f * f, eta)
+                }
             }
+            base = upscaled
 
             // ---- finalize ----
             report(Stage.FINALIZING, 0.92f)
@@ -155,6 +163,7 @@ class EnhancePipeline(
             val result = EnhanceResult(
                 base = base, proxy = proxy, before = before, faces = layers, inputWidth = inputW,
                 levels = levels, original = info, profile = profile, modeUsed = recipe.modeUsed, notes = notes,
+                defaultParams = EditParams(sharpness = if (fast) 0.3f else 0f),
             )
             base = null // ownership moved to the result
             return result

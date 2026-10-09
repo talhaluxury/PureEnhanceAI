@@ -75,7 +75,7 @@ fun ResultScreen(
                 style = MaterialTheme.typography.labelLarge, color = MaterialTheme.colorScheme.primary,
                 modifier = Modifier.heightIn(min = 48.dp).clickable { adjust = !adjust },
             )
-            AnimatedVisibility(adjust) { AdjustPanel(state.params, onParams) }
+            AnimatedVisibility(adjust) { AdjustPanel(state.params, result.defaultParams, onParams) }
 
             when (val s = state.saveState) {
                 is SaveState.Saved -> Row(verticalAlignment = Alignment.CenterVertically) {
@@ -120,12 +120,12 @@ fun ResultScreen(
 }
 
 @Composable
-private fun AdjustPanel(p: EditParams, onChange: (EditParams) -> Unit) {
+private fun AdjustPanel(p: EditParams, defaults: EditParams, onChange: (EditParams) -> Unit) {
     GlassCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(14.dp)) {
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 FilterChip(selected = p == EditParams.Original, onClick = { onChange(EditParams.Original) }, label = { Text("Original") }, modifier = Modifier.height(48.dp))
-                FilterChip(selected = p == EditParams(), onClick = { onChange(EditParams()) }, label = { Text("Enhanced") }, modifier = Modifier.height(48.dp))
+                FilterChip(selected = p == defaults, onClick = { onChange(defaults) }, label = { Text("Enhanced") }, modifier = Modifier.height(48.dp))
             }
             Control("Auto Enhance", p.autoEnhance, 0f..1.2f) { onChange(p.copy(autoEnhance = it)) }
             Control("Face Enhance", p.faceEnhance, 0f..1.3f) { onChange(p.copy(faceEnhance = it)) }

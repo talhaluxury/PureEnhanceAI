@@ -84,12 +84,20 @@ fun PreviewScreen(
                 options = q.map { it.label }, selected = q.indexOf(state.quality),
                 onSelect = { onQuality(q[it]) },
                 isEnabled = { q[it] != Quality.MAXIMUM || maxAllowed },
-                badges = mapOf(q.indexOf(state.recommendedQuality) to "Best"),
+                badges = mapOf(q.indexOf(state.recommendedQuality) to "★"),
             )
             if (!maxAllowed) {
                 Text("Maximum needs a device with about 6 GB of RAM or more.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
 
+            Text(
+                when (state.quality) {
+                    Quality.BALANCED -> "Fast: AI face restoration + clean upscale. Usually under a minute."
+                    Quality.HIGH -> "High: full AI upscaling on a smaller image. Takes several minutes."
+                    Quality.MAXIMUM -> "Maximum: full AI detail. Can take 10+ minutes."
+                },
+                style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
             Text("Scale", style = MaterialTheme.typography.labelLarge)
             Segmented(
                 options = listOf("2×", "4×"), selected = if (state.scale == 4) 1 else 0,
